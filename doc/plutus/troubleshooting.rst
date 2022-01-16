@@ -1,73 +1,72 @@
-Troubleshooting
+Xử lý sự cố
 ===============
 
-Plugin errors
+Lỗi plugin
 -------------
 
-Errors that start with ``GHC Core to PLC plugin`` are errors from ``plutus-tx-plugin``.
+Các lỗi bắt đầu với `` GHC Core to PLC plugin '' là lỗi từ `` plutus-tx-plugin ''.
 
-.. note::
-   Often these errors arise due to GHC doing something to the code before the plugin gets to see it.
-   So the solution is often to prevent GHC from doing this, which is why we often recommend trying various GHC compiler flags.
+.. Lưu ý::
+  Thường thì những lỗi này phát sinh do GHC làm gì đó với mã trước khi plugin nhìn thấy nó.
+    Vì vậy, giải pháp thường là ngăn GHC làm điều này, đó là lý do tại sao chúng tôi thường khuyên bạn nên thử các cờ trình biên dịch GHC khác nhau.
 
 Haddock
 ~~~~~~~
 
-The plugin will typically fail when producing Haddock documentation.
-However, in this instance you can simply tell it to defer any errors to runtime (which will never happen since you're building documentation).
+Plugin thường sẽ bị lỗi khi tạo tài liệu Haddock.
+Tuy nhiên, trong trường hợp này, bạn có thể chỉ cần yêu cầu nó trì hoãn bất kỳ lỗi nào đối với thời gian chạy (điều này sẽ không bao giờ xảy ra vì bạn đang xây dựng tài liệu).
 
-A easy way to do this is to add the following lines for your ``package-name`` to ``cabal.project``::
+Một cách dễ dàng để làm điều này là thêm các dòng sau cho ``package-name`` thành ``cabal.project``::
 
   package package-name
     haddock-options: "--optghc=-fplugin-opt PlutusTx.Plugin:defer-errors"
 
-Non-``INLINABLE`` functions
-~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Các hàm không phải ``INLINABLE ''
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-A common error is:
+Một lỗi phổ biến là:
 
 ``Error: Reference to a name which is not a local, a builtin, or an external INLINABLE function``
 
-This means the plugin doesn't have access to implementation of the function, which it needs to be able to compile the function to Plutus Core.
-Some things you can do to fix it:
+Điều này có nghĩa là plugin không có quyền truy cập vào việc triển khai chức năng, mà nó cần để có thể biên dịch chức năng thành Plutus Core.
+Một số điều bạn có thể làm để khắc phục:
 
-- Make sure to add ``{-# INLINABLE functionname #-}`` to your function.
-- If there's an extra ``$c`` in front of the function name in the error, GHC has generated a specialised version of your function,
-  which prevents the plugin from accessing it.
-  You can turn off specialisation with ``{-# OPTIONS_GHC -fno-specialise #-}``
-- Other compiler options that can help:
+- Đảm bảo thêm  ``{-# INLINABLE functionname #-}`` vào hàm của bạn.
+- Nếu có thểm ``$c``phía trước tên hàm bị lỗi, GHC đã tạo một phiên bản chuyên biệt cho hàm của bạn, điều này ngăn không cho plugin truy cập vào nó .
+  Bạn có thể tắt  với ``{-# OPTIONS_GHC -fno-specialise #-}``
+- Các tùy chọn trình biên dịch khác có thể giúp:
 
   - ``{-# OPTIONS_GHC -fno-strictness #-}``
   - ``{-# OPTIONS_GHC -fno-ignore-interface-pragmas #-}``
   - ``{-# OPTIONS_GHC -fno-omit-interface-pragmas #-}``
   - ``{-# OPTIONS_GHC -fobject-code #-}``
 
-  Some more details are in `the plutus-tx readme <https://github.com/input-output-hk/plutus/tree/master/plutus-tx#building-projects-with-plutus-tx>`_.
+  Một số chi tiết khác có trong `the plutus-tx readme <https://github.com/input-output-hk/plutus/tree/master/plutus-tx#building-projects-with-plutus-tx>`_.
 
-Haskell Language Server issues
+Sự cố máy chủ ngôn ngữ Haskell
 ------------------------------
 
-For more advice on using Haskell Language Server (HLS), consult the `CONTRIBUTING guide <https://github.com/input-output-hk/plutus/blob/master/CONTRIBUTING.adoc>`_ in the ``plutus`` repository.
+Để được tư vấn thêm về cách sử dụng Máy chủ ngôn ngữ Haskell (HLS), hãy tham khảo `CONTRIBUTING guide <https://github.com/input-output-hk/plutus/blob/master/CONTRIBUTING.adoc>`_ in the ``plutus`` repository.
 
-Wrong version
+Sai version
 ~~~~~~~~~~~~~
 
 ``ghcide compiled against GHC 8.10.3 but currently using 8.10.2.20201118``
 
-Your editor is not picking up the right version of the Haskell Language Server (HLS).
-Plutus needs a custom version of HLS which is provided by Nix.
-So get this working in your editor, make sure to do these two things:
+Trình chỉnh sửa của bạn không chọn đúng phiên bản của Máy chủ Ngôn ngữ Haskell (HLS).
+Plutus cần một phiên bản tùy chỉnh của HLS do Nix cung cấp.
+Vì vậy, làm cho điều này hoạt động trong trình chỉnh sửa của bạn, hãy đảm bảo thực hiện hai điều sau:
 
-- Start your editor from ``nix-shell`` (or use ``direnv``)
-- Most editors are configured to use ``haskell-language-server-wrapper``, which is a wrapper which picks the right HLS version.
-  Change this to just ``haskell-language-server``.
+- Khởi động trình soạn thảo của bạn từ `` nix-shell '' (hoặc sử dụng `` direnv '')
+- Hầu hết các trình soạn thảo được định cấu hình để sử dụng `` haskell-language-server-wrapper '', là một trình bao bọc chọn phiên bản HLS phù hợp.
+   Thay đổi điều này thành chỉ `` haskell-language-server ''.
 
-If this doesn't work, run ``which haskell-language-server`` in `nix-shell`, and use this absolute path in the configuration of your editor.
+Nếu cách này không hiệu quả, hãy chạy `` haskell-language-server '' trong `nix-shell` và sử dụng đường dẫn tuyệt đối này trong cấu hình trình soạn thảo của bạn.
 
-Error codes
+Mã lỗi
 -----------
 
-To reduce code size, on-chain errors only output codes. Here's what they mean:
+Để giảm kích thước mã, lỗi trên chuỗi chỉ xuất mã. Đây là ý nghĩa của chúng:
 
 ..
   This list can be generated with:

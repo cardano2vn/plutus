@@ -1,42 +1,42 @@
 .. highlight:: haskell
 .. _exporting_a_script:
 
-How to export scripts, datums and redeemers
+Cách xuất script, datums và redemers
 ===========================================
 
-.. note::
-    This guide uses the scripts from the :ref:`basic validators tutorial <basic_validators_tutorial>`.
+.. Lưu ý::
+    Hướng dẫn này sử dụng các tập lệnh từ: ref: `basic validators tutorial <basic_validators_tutorial>`.
 
-Since scripts must match their on-chain hashes exactly, it is important that the scripts which an application uses do not accidentally change.
-For example, changing the source code or updating dependencies or tooling may lead to small changes in the script - but since the hashes must match exactly, even small changes can be problematic.
+Vì các tập lệnh phải khớp chính xác với các hàm băm trên chuỗi của chúng, nên điều quan trọng là các tập lệnh mà ứng dụng sử dụng không được vô tình thay đổi.
+Ví dụ: thay đổi mã nguồn hoặc cập nhật các phần phụ thuộc hoặc công cụ có thể dẫn đến những thay đổi nhỏ trong tập lệnh - nhưng vì các hàm băm phải khớp chính xác nên ngay cả những thay đổi nhỏ cũng có thể gây ra vấn đề.
 
-For this reason, once you expect that you will not modify the on-chain part of your application more, it is sensible to *freeze* it by saving the final Plutus Core to a file.
+Vì lý do này, một khi bạn mong đợi rằng bạn sẽ không sửa đổi phần on-chain của ứng dụng của mình nhiều hơn, bạn có thể * đóng băng * nó bằng cách lưu Plutus Core cuối cùng vào một tệp.
 
-Additionally, while most Plutus Applications use scripts by directly submitting them as part of transactions from the application itself, it can be useful to be able to export a serialized script.
-For example, you might want to submit it as part of a manually created transaction with the Cardano node CLI, or send it to another party for them to use.
+Ngoài ra, trong khi hầu hết các Ứng dụng Plutus sử dụng các tập lệnh bằng cách trực tiếp gửi chúng như một phần của các giao dịch từ chính ứng dụng, thì việc xuất một tập lệnh được tuần tự hóa có thể hữu ích.
+Ví dụ: bạn có thể muốn gửi nó như một phần của giao dịch được tạo theo cách thủ công với CLI của nút Cardano hoặc gửi nó cho một bên khác để họ sử dụng.
 
-Fortunately, it is quite simple to do this.
-Most of the types have typeclass instances for ``Serialise`` which allows translating directly into CBOR.
-This applies to ``Validator``, ``Redeemer``, and ``Datum`` types.
-If you want to create values that you can pass to the Cardano CLI, you will need to convert them to the appropriate types from ``cardano-api`` and use ``serialiseToTextEnvelope``.
+May mắn thay, nó là khá đơn giản để làm điều này.
+Hầu hết các loại đều có phiên bản typeclass cho `` Serialise '' cho phép dịch trực tiếp sang CBOR.
+Điều này áp dụng cho các loại `` Validator '', `` Redeemer '' và `` Datum ''.
+Nếu bạn muốn tạo các giá trị mà bạn có thể chuyển đến Cardano CLI, bạn sẽ cần chuyển đổi chúng thành các loại thích hợp từ `` cardano-api '' và sử dụng `` serialiseToTextEnvelope ''.
 
 .. literalinclude:: ../tutorials/BasicValidators.hs
    :start-after: BLOCK5
    :end-before: BLOCK6
 
-``CompiledCode`` has a different serialization method, ``Flat``, but the principle is the same.
+`` CompiledCode '' có một phương thức tuần tự hóa khác, `` Flat '', nhưng nguyên tắc thì giống nhau.
 
-The serialized form of ``CompiledCode`` can also be dumped using a plugin option:
+Dạng tuần tự của `` CompiledCode ''  cũng có thể được kết xuất bằng cách sử dụng tùy chọn plugin:
 
 .. code-block:: haskell
 
    {-# OPTIONS_GHC -fplugin-opt PlutusTx.Plugin:dump-uplc #-}
 
-This will dump the output to a temporary file with a name based on the module name.
-The filename will be printed to the console when compiling the source file.
-You can then move it to a more permanent location.
+Điều này sẽ kết xuất đầu ra vào một tệp tạm thời có tên dựa trên tên mô-đun.
+Tên tệp sẽ được in ra bảng điều khiển khi biên dịch tệp nguồn.
+Sau đó, bạn có thể di chuyển nó đến một vị trí lâu dài hơn.
 
-It can be read in conveniently with ``loadFromFile`` as an alternative to ``compile``.
+Nó có thể được đọc một cách thuận tiện với `` loadFromFile '' như một giải pháp thay thế cho `` biên dịch ''.
 
 .. literalinclude:: ../tutorials/BasicValidators.hs
    :start-after: BLOCK6

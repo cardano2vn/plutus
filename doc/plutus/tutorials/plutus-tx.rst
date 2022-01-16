@@ -1,79 +1,80 @@
 .. highlight:: haskell
 .. _plutus_tx_tutorial:
 
-Using Plutus Tx
+Sử dụng Plutus Tx
 ===============
 
-Plutus applications are written as a single Haskell program, which describes both the code that runs off the chain (on a user’s computer, or in their wallet, for example), and on the chain as part of transaction validation.
+Các ứng dụng Plutus được viết dưới dạng một chương trình Haskell duy nhất, mô tả cả mã chạy ngoài chuỗi (ví dụ: trên máy tính của người dùng hoặc trong ví của họ) và trên chuỗi như một phần của xác thực giao dịch.
 
-The parts of the program that describe the on-chain code are still just Haskell, but they are compiled into :term:`Plutus Core`, rather than into the normal compilation target language.
-We refer to them as :term:`Plutus Tx` programs (where 'Tx' indicates that these components usually go into transactions).
+Các phần của chương trình mô tả mã trên chuỗi vẫn chỉ là Haskell, nhưng chúng được biên dịch thành: Thuật ngữ: `Plutus Core`, thay vì thành ngôn ngữ đích biên dịch thông thường.
+Chúng tôi gọi chúng là: thuật ngữ: Chương trình Plutus Tx` (trong đó 'Tx' chỉ ra rằng các thành phần này thường đi vào các giao dịch).
 
-.. warning::
+.. Cảnh báo::
 
-   Strictly speaking, while the majority of simple Haskell will work, only a subset of Haskell is supported by the Plutus Tx compiler.
-   The Plutus Tx compiler will tell you if you are attempting to use an unsupported component.
+  Nói một cách chính xác, trong khi phần lớn Haskell đơn giản sẽ hoạt động, chỉ một tập hợp con của Haskell được hỗ trợ bởi trình biên dịch Plutus Tx.
+    Trình biên dịch Plutus Tx sẽ cho bạn biết nếu bạn đang cố sử dụng một thành phần không được hỗ trợ.
 
-The key technique that we use to implement Plutus Tx is called *staged metaprogramming*, which means that the main Haskell program generates *another* program (in this case, the Plutus Core program that will run on the blockchain).
-Plutus Tx is the mechanism we use to write those programs, but since Plutus Tx is just part of the main Haskell program, we can share types and definitions between the two.
+Kỹ thuật quan trọng mà chúng tôi sử dụng để triển khai Plutus Tx được gọi là * phân đoạn siêu lập trình *, có nghĩa là chương trình Haskell chính tạo ra chương trình * khác * (trong trường hợp này là chương trình Plutus Core sẽ chạy trên blockchain).
+Plutus Tx là cơ chế chúng tôi sử dụng để viết các chương trình đó, nhưng vì Plutus Tx chỉ là một phần của chương trình Haskell chính, chúng tôi có thể chia sẻ các loại và định nghĩa giữa hai loại.
 
 .. _template_haskell_preliminaries:
 
-Template Haskell preliminaries
+Sơ bộ mẫu Haskell
 ------------------------------
 
-Plutus Tx uses Haskell's metaprogramming support, Template Haskell, for two main reasons:
+Plutus Tx sử dụng hỗ trợ lập trình siêu mẫu của Haskell, Template Haskell, vì hai lý do chính:
 
--  Template Haskell enables us to work at compile time, which is when we do Plutus Tx compilation.
--  It allows us to wire up the machinery that invokes the Plutus Tx compiler.
+- Template Haskell cho phép chúng tôi làm việc tại thời điểm biên dịch, đó là khi chúng tôi biên dịch Plutus Tx.
+- Nó cho phép chúng tôi kết nối bộ máy sử dụng trình biên dịch Plutus Tx.
 
 Template Haskell is very versatile, but we only use a few features.
 
-Template Haskell begins with *quotes*.
-A Template Haskell quote is a Haskell expression ``e`` inside special brackets ``[|| e ||]``.
-It has type ``Q (TExp a)`` where ``e`` has type ``a``. ``TExp a`` is a *representation* an expression of type ``a``, i.e. the syntax of the actual Haskell expression that was quoted.
-The quote lives in the type ``Q`` of quotes, which isn’t very interesting for us.
+Template Haskell rất linh hoạt, nhưng chúng tôi chỉ sử dụng một vài tính năng.
 
-.. note::
+Mẫu Haskell bắt đầu bằng * dấu ngoặc kép *.
+Trích dẫn Haskell Mẫu là một biểu thức Haskell `` e '' bên trong các dấu ngoặc đặc biệt `` [|| e ||] ``.
+Nó có kiểu `` Q (TExp a) `` trong đó `` e '' có kiểu `` a ''. `` TExp a`` là một * biểu diễn * một biểu thức của kiểu `` a '', tức là cú pháp của biểu thức Haskell thực đã được trích dẫn.
+Câu trích dẫn nằm trong kiểu trích dẫn `` Q '', điều này không thú vị lắm đối với chúng tôi.
 
-   There is also an abbreviation ``TExpQ a`` for ``Q (TExp a)``, which avoids some parentheses.
+.. Lưu ý::
 
-You can *splice* a quote into your program using the ``$$`` operator.
-This inserts the syntax represented by the quote into the program at the point where the splice is written.
+   Ngoài ra còn có một chữ viết tắt `` TExpQ a '' cho `` Q (TExp a) '', tránh một số dấu ngoặc đơn.
 
-Simply put, a quote allows us to talk about Haskell programs as *values*.
+Bạn có thể * ghép * một câu trích dẫn vào chương trình của mình bằng toán tử `` $$ ''.
+Thao tác này sẽ chèn cú pháp được đại diện bởi câu trích dẫn vào chương trình tại điểm mà mối ghép được viết.
 
-The Plutus Tx compiler compiles Haskell *expressions* (not values!), so naturally it takes a quote (representing an expression) as an argument.
-The result is a new quote, this time for a Haskell program that represents the *compiled* program.
-In Haskell, the type of :hsobj:`PlutusTx.TH.compile` is ``TExpQ a → TExpQ (CompiledCode a)``.
-This is just what we already said:
+Nói một cách đơn giản, một câu trích dẫn cho phép chúng ta nói về các chương trình Haskell dưới dạng * giá trị *.
 
--  ``TExpQ a`` is a quoted representing a program of type ``a``.
+Trình biên dịch Plutus Tx biên dịch các biểu thức Haskell * * (không phải giá trị!), Do đó, tự nhiên nó lấy một dấu ngoặc kép (đại diện cho một biểu thức) làm đối số.
+Kết quả là một trích dẫn mới, lần này là cho một chương trình Haskell đại diện cho chương trình * đã biên dịch *.
+Trong Haskell, kiểu: hsobj: `PlutusTx.TH.compile` là` `TExpQ a → TExpQ (CompiledCode a) ''.
+Đây chỉ là những gì chúng tôi đã nói
 
--  ``TExpQ (CompiledCode a)`` is quote representing a
-   compiled Plutus Core program.
+- `` TExpQ a '' là một đoạn trích dẫn đại diện cho một chương trình kiểu `` a ''.
 
-.. note::
+- `` TExpQ (CompiledCode a) '' là câu trích dẫn đại diện cho một chương trình  đã biên dịch với Plutus Core.
 
-   :hsobj:`PlutusTx.CompiledCode` also has a type parameter ``a``, which corresponds to the type of the original expression.
-      This lets us "remember" the type of the original Haskell program we compiled.
+.. Lưu ý::
 
-Since :hsobj:`PlutusTx.TH.compile` produces a quote, to use the result we need to splice it back into our program.
-The Plutus Tx compiler runs when compiling the main program, and the compiled program will be inserted into the main program.
+: hsobj: `PlutusTx.CompiledCode` cũng có tham số kiểu` `a '', tương ứng với kiểu của biểu thức gốc.
+       Điều này cho phép chúng tôi "ghi nhớ" loại chương trình Haskell ban đầu mà chúng tôi đã biên dịch.
 
-This is all you need to know about the Template Haskell!
-We often use the same simple pattern: make a quote, immediately call :hsobj:`PlutusTx.TH.compile`, and then splice the result back in.
+Vì: hsobj: `PlutusTx.TH.compile` tạo ra một câu trích dẫn, để sử dụng kết quả, chúng tôi cần ghép nó trở lại chương trình của chúng tôi.
+Trình biên dịch Plutus Tx chạy khi biên dịch chương trình chính, và chương trình đã biên dịch sẽ được chèn vào chương trình chính.
+
+Đây là tất cả những gì bạn cần biết về Template Haskell!
+Chúng tôi thường sử dụng cùng một mẫu đơn giản: tạo một câu trích dẫn, ngay lập tức gọi: hsobj: `PlutusTx.TH.compile`, và sau đó ghép kết quả lại vào.
 
 .. _writing_basic_plutustx_programs:
 
-Writing basic Plutus Tx programs
+Viết các chương trình Plutus Tx cơ bản
 --------------------------------
 
 .. literalinclude:: BasicPlutusTx.hs
    :start-after: BLOCK1
    :end-before: BLOCK2
 
-This simple program just evaluates to the integer ``1``.
+Chương trình đơn giản này chỉ đánh giá là số nguyên `` 1 ''.
 
 .. note::
    The examples that show the Plutus Core generated from compilation include doctests.
@@ -84,13 +85,13 @@ This simple program just evaluates to the integer ``1``.
    :start-after: BLOCK2
    :end-before: BLOCK3
 
-We can see how the metaprogramming works: the Haskell program ``1`` was turned into a ``CompiledCode Integer`` at compile time, which we spliced into our Haskell program.
-We can inspect the generated program at runtime to see the generated Plutus Core (or to put it on the blockchain).
+Chúng ta có thể thấy cách lập trình siêu hình hoạt động: chương trình Haskell `` 1 '' đã được biến thành `` Số nguyên mã biên dịch '' tại thời điểm biên dịch, mà chúng tôi đã ghép vào chương trình Haskell của mình.
+Chúng tôi có thể kiểm tra chương trình được tạo trong thời gian chạy để xem Plutus Core được tạo (hoặc để đưa nó vào blockchain).
 
-We also see the standard usage pattern: a TH quote, wrapped in a call to :hsobj:`PlutusTx.TH.compile`, wrapped in a ``$$`` splice.
-This is how all our Plutus Tx programs are written.
+Chúng tôi cũng thấy kiểu sử dụng tiêu chuẩn: một câu trích dẫn TH, được gói trong một lệnh gọi tới: hsobj: `PlutusTx.TH.compile`, được bọc trong một mối nối` `$$ ''.
+Đây là cách tất cả các chương trình Plutus Tx của chúng tôi được viết.
 
-This is a slightly more complex program. It includes the identity function on integers.
+Đây là một chương trình phức tạp hơn một chút. Nó bao gồm chức năng nhận dạng trên số nguyên.
 
 .. literalinclude:: BasicPlutusTx.hs
    :start-after: BLOCK3
@@ -98,32 +99,31 @@ This is a slightly more complex program. It includes the identity function on in
 
 .. _functions_and_datatypes:
 
-Functions and datatypes
+Hàm và kiểu dữ liệu
 -----------------------
 
-You can use functions inside your expression.
-In practice, you will usually want to define the entirety of your Plutus Tx program as a definition outside the quote, and then simply call it inside the quote.
-
+Bạn có thể sử dụng các hàm bên trong biểu thức của mình.
+Trong thực tế, bạn thường sẽ muốn xác định toàn bộ chương trình Plutus Tx của mình như một định nghĩa bên ngoài trích dẫn và sau đó chỉ cần gọi nó bên trong trích dẫn.
 .. literalinclude:: BasicPlutusTx.hs
    :start-after: BLOCK4
    :end-before: BLOCK5
 
-We can use normal Haskell datatypes and pattern matching freely:
+Chúng tôi có thể sử dụng các kiểu dữ liệu Haskell bình thường và đối sánh mẫu một cách tự do:
 
 .. literalinclude:: BasicPlutusTx.hs
    :start-after: BLOCK5
    :end-before: BLOCK6
 
-Unlike functions, datatypes do not need any kind of special annotation to be used inside a quote, hence we can use types like ``Maybe`` from the Haskell ``Prelude``.
-This works for your own datatypes too!
+Không giống như các hàm, các kiểu dữ liệu không cần bất kỳ loại chú thích đặc biệt nào được sử dụng bên trong một câu trích dẫn, do đó chúng ta có thể sử dụng các loại như `` Có thể '' từ `` Prelude '' của Haskell.
+Điều này cũng hoạt động cho các kiểu dữ liệu của riêng bạn!
 
-Here’s a small example with a datatype representing a potentially open-ended end date.
+Dưới đây là một ví dụ nhỏ với loại dữ liệu đại diện cho một ngày kết thúc có khả năng mở
 
 .. literalinclude:: BasicPlutusTx.hs
    :start-after: BLOCK6
    :end-before: BLOCK7
 
-We could also have defined the ``pastEnd`` function as a separate ``INLINABLE`` binding and just referred to it in the quote, but in this case, it’s small enough to just write in place.
+Chúng tôi cũng có thể đã định nghĩa hàm `` pastEnd '' như một ràng buộc `` INLINABLE '' riêng biệt và chỉ đề cập đến nó trong phần trích dẫn, nhưng trong trường hợp này, nó đủ nhỏ để chỉ cần viết tại chỗ.
 
 .. _typeclasses:
 
@@ -146,67 +146,67 @@ This will be compiled to exactly the same code as the previous definition.
 
 .. _the_plutus_tx_prelude:
 
-The Plutus Tx Prelude
+Khúc dạo đầu của Plutus Tx
 ---------------------
 
-The :hsmod:`PlutusTx.Prelude` module is a drop-in replacement for the normal Haskell Prelude, with some redefined functions and typeclasses that makes it easier for the Plutus Tx compiler to handle (i.e.``INLINABLE``).
+Mô-đun: hsmod: `PlutusTx.Prelude` là một phần thay thế cho Haskell Prelude thông thường, với một số chức năng và kiểu lớp được định nghĩa trước  giúp trình biên dịch Plutus Tx xử lý dễ dàng hơn (tức là` `CÓ THỂ LƯU TRỮ '').
 
-Use the Plutus Tx Prelude for code that you expect to compile with the Plutus Tx compiler.
-All the definitions in the Plutus Tx Prelude include working Haskell definitions, which means that you can use them in normal Haskell code too, although the Haskell Prelude versions will probably perform better.
+Sử dụng Plutus Tx Prelude cho mã mà bạn muốn biên dịch bằng trình biên dịch Plutus Tx.
+Tất cả các định nghĩa trong Plutus Tx Prelude bao gồm các định nghĩa Haskell đang hoạt động, có nghĩa là bạn cũng có thể sử dụng chúng trong mã Haskell bình thường, mặc dù các phiên bản Haskell Prelude có thể sẽ hoạt động tốt hơn.
 
-To use the Plutus Tx Prelude, use the ``NoImplicitPrelude`` language pragma and import :hsmod:`PlutusTx.Prelude`.
+Để sử dụng Plutus Tx Prelude, hãy sử dụng pragma ngôn ngữ `` NoImplicitPrelude '' và nhập: hsmod: `PlutusTx.Prelude`.
 
-Plutus Tx includes some built-in types and functions for working with primitive data (integers and bytestrings), as well as a few special functions.
-These types are also exported from the Plutus Tx Prelude.
+Plutus Tx bao gồm một số kiểu và hàm tích hợp để làm việc với dữ liệu nguyên thủy (số nguyên và chuỗi bytest), cũng như một số hàm đặc biệt.
+Những loại này cũng được xuất ra từ Plutus Tx Prelude.
 
-The :hsobj:`PlutusTx.Builtins.error` built-in deserves a special mention.
-:hsobj:`PlutusTx.Builtins.error` causes the transaction to abort when it is evaluated, which is one way to trigger a validation failure.
+Tích hợp: hsobj: `PlutusTx.Builtins.error` xứng đáng được đề cập đặc biệt.
+: hsobj: `PlutusTx.Builtins.error` khiến giao dịch bị hủy khi nó được đánh giá, đây là một cách để kích hoạt quá trình xác thực không thành công.
 
 .. _lifting_values:
 
-Lifting values
+Nâng giá trị
 --------------
 
-So far we’ve seen how to define pieces of code *statically* (when you *compile* your main Haskell program), but you might want to generate code *dynamically* (that is, when you *run* your main Haskell program).
-For example, you might be writing the body of a transaction to initiate a crowdfunding smart contract, which would need to be parameterized by data determining the size of the goal, the campaign start and end times, etc.
+Cho đến nay, chúng ta đã biết cách xác định các đoạn mã * tĩnh * (khi bạn * biên dịch * chương trình Haskell chính của mình), nhưng bạn có thể muốn tạo mã * động * (nghĩa là khi bạn * chạy * chương trình Haskell chính của mình ).
+Ví dụ: bạn có thể đang viết nội dung của giao dịch để bắt đầu hợp đồng thông minh huy động vốn cộng đồng, hợp đồng này sẽ cần được tham số hóa bằng dữ liệu xác định quy mô mục tiêu, thời gian bắt đầu và kết thúc của chiến dịch, v.v.
 
-We can do this in the same way that we parameterize code in functional programming: write the static code as a *function* and provide the argument later to configure it.
+Chúng ta có thể làm điều này giống như cách chúng ta tham số hóa mã trong lập trình hàm: viết mã tĩnh dưới dạng một * hàm * và cung cấp đối số sau đó để cấu hình nó.
 
-In our case, there is a slight complication: we want to make the argument and apply the function to it at *runtime*.
-Plutus Tx addresses this through *lifting*.
-Lifting enables the use of the same types, both inside your Plutus Tx program *and* in the external code that uses it.
+Trong trường hợp của chúng tôi, có một chút phức tạp: chúng tôi muốn tạo đối số và áp dụng hàm cho nó tại * runtime *.
+Plutus Tx giải quyết vấn đề này thông qua * nâng *.
+Lifting cho phép sử dụng các loại giống nhau, cả bên trong chương trình Plutus Tx của bạn * và * trong mã bên ngoài sử dụng nó.
 
-.. note::
+.. Lưu ý::
 
-   In this context, *runtime* means the runtime of the main Haskell program, **not** when the Plutus Core runs on the chain.
-   We want to configure our code when the main Haskell program runs, as that is when we will be getting user input.
+ Trong ngữ cảnh này, * runtime * có nghĩa là thời gian chạy của chương trình Haskell chính, ** không phải ** khi Plutus Core chạy trên chuỗi.
+ Chúng tôi muốn định cấu hình mã của mình khi chương trình Haskell chính chạy, vì đó là thời điểm chúng tôi sẽ nhận được thông tin đầu vào của người dùng.
 
-In this example, we add an add-one function.
+Trong ví dụ này, chúng tôi thêm một chức năng bổ sung..
 
 .. literalinclude:: BasicPlutusTx.hs
    :start-after: BLOCK8
    :end-before: BLOCK9
 
-Now, suppose we want to apply this to ``4`` at runtime, giving us a program that computes to ``5``.
-We need to *lift* the argument (``4``) from Haskell to Plutus Core, and then we need to apply the function to it.
+Bây giờ, giả sử chúng ta muốn áp dụng điều này cho `` 4 '' trong thời gian chạy, cung cấp cho chúng ta một chương trình tính toán thành `` 5 ''.
+Chúng ta cần * nâng * đối số (`` 4 '') từ Haskell sang Plutus Core, và sau đó chúng ta cần áp dụng hàm cho nó.
 
 .. literalinclude:: BasicPlutusTx.hs
    :start-after: BLOCK9
    :end-before: BLOCK10
 
-We lifted the argument using the :hsobj:`PlutusTx.liftCode` function.
-To use this, a type must have an instance of the :hsobj:`PlutusTx.Lift` class.
-For your own datatypes you should generate these with the :hsobj:`PlutusTx.makeLift` TH function from :hsmod:`PlutusTx.Lift`.
+Chúng tôi đã loại bỏ đối số bằng cách sử dụng hàm: hsobj: `PlutusTx.liftCode`.
+Để sử dụng điều này, một kiểu phải có một thể hiện của lớp: hsobj: `PlutusTx.Lift`.
+Đối với các kiểu dữ liệu của riêng bạn, bạn nên tạo các kiểu này bằng hàm: hsobj: `PlutusTx.makeLift` TH từ: hsmod:` PlutusTx.Lift`.
 
 .. note::
 
-   :hsobj:`PlutusTx.liftCode` is relatively unsafe because it ignores any errors that might occur from lifting something that might not be supported.
-   There is a :hsobj:`PlutusTx.safeLiftCode` if you want to explicitly handle these occurrences.
+   : hsobj: `PlutusTx.liftCode` tương đối không an toàn vì nó bỏ qua bất kỳ lỗi nào có thể xảy ra khi nâng thứ gì đó có thể không được hỗ trợ.
+    Có một: hsobj: `PlutusTx.safeLiftCode` nếu bạn muốn xử lý rõ ràng những sự cố này
 
-The combined program applies the original compiled lambda to the lifted value (notice that the lambda is a bit complicated now, since we have compiled the addition into a built-in).
+Chương trình kết hợp áp dụng lambda đã biên dịch ban đầu cho giá trị nâng lên (lưu ý rằng lambda bây giờ hơi phức tạp, vì chúng tôi đã biên dịch phần bổ sung thành một tích hợp sẵn).
 
-Here’s an example with our custom datatype.
-The output is the encoded version of ``False``.
+Đây là một ví dụ với loại dữ liệu tùy chỉnh của chúng tôi.
+Đầu ra là phiên bản được mã hóa của `` False ''.
 
 .. literalinclude:: BasicPlutusTx.hs
    :start-after: BLOCK10

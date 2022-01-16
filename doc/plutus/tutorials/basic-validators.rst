@@ -1,76 +1,76 @@
 .. highlight:: haskell
 .. _basic_validators_tutorial:
 
-Writing basic validator scripts
-===============================
-
-:term:`Validator scripts<validator script>` are the programs that can be used to lock transaction outputs on the chain.
-Validator scripts are :term:`Plutus Core` programs, but we can use :term:`Plutus Tx` to write them easily in Haskell.
-Check out the :ref:`Plutus Tx tutorial<plutus_tx_tutorial>` before reading this one.
-
-Validator arguments
+Viết các tập lệnh xác thực cơ bản
 -------------------
 
-Validators receive some information from the validating node:
+: term: `Validator scripts <validator script>` là các chương trình có thể được sử dụng để khóa các đầu ra giao dịch trên chuỗi.
+Các tập lệnh của trình xác thực là: term: chương trình `Plutus Core`, nhưng chúng ta có thể sử dụng: term:` Plutus Tx` để viết chúng một cách dễ dàng trong Haskell.
+Hãy xem: ref: `Plutus Tx tutorial <plutus_tx_tutorial>" trước khi đọc cái này.
 
-- The :term:`redeemer`, which is some script-specific data specified by the party spending the output.
-- The :term:`datum`, which is some script-specific data specified by the party who created the output.
-- The :term:`script context`, which contains a representation of the spending transaction, as well as the index of the input whose validator is currently being run.
+Đối số của trình xác thực
+-------------------
 
-The validator is a function which receives these three inputs as *arguments*.
-The validating node is responsible for passing them in and running the validator.
+Trình xác thực nhận được một số thông tin từ nút xác thực:
 
-The ``Data`` type
+- The: term: `Reder`, là một số dữ liệu theo tập lệnh cụ thể được chỉ định bởi bên chi tiêu đầu ra.
+- Thuật ngữ: term: `datum`, là một số dữ liệu dành riêng cho tập lệnh được chỉ định bởi bên tạo đầu ra.
+- The: term: `script context`, bao gồm đại diện của giao dịch chi tiêu, cũng như chỉ mục của đầu vào mà trình xác thực hiện đang được chạy.
+
+Trình xác thực là một hàm nhận ba đầu vào này dưới dạng * đối số *.
+Nút xác thực chịu trách nhiệm chuyển chúng vào và chạy trình xác thực.
+
+Loại `` Dữ liệu ''
 -----------------
 
-But how are the validator's arguments passed?
-Different scripts are going to expect different sorts of values in their datums and redeemers.
+Nhưng các đối số của trình xác thực được thông qua như thế nào?
+Các tập lệnh khác nhau sẽ mong đợi các loại giá trị khác nhau trong kho dữ liệu và bộ định nghĩa lại của chúng.
 
-The answer is that we pass the arguments as a *generic* structured data type :hsobj:`PlutusCore.Data.Data`.
-``Data`` is designed to make it easy to encode structured data into it, and is essentially a subset of CBOR.
+Câu trả lời là chúng ta truyền các đối số dưới dạng kiểu dữ liệu có cấu trúc * chung chung *: hsobj: `PlutusCore.Data.Data`.
+`` Dữ liệu '' được thiết kế để giúp dễ dàng mã hóa dữ liệu có cấu trúc vào đó và về cơ bản là một tập hợp con của CBOR.
 
-Validator scripts take three arguments of type ``Data``.
-Since ``Data`` is represented as a builtin type in Plutus Core, we use a special Haskell type ``BuiltinData`` rather than the underlying ``Data`` type
+Tập lệnh trình xác thực nhận ba đối số kiểu `` Dữ liệu ''.
+Vì `` Dữ liệu '' được biểu thị dưới dạng kiểu nội trang trong Plutus Core, chúng tôi sử dụng kiểu Haskell đặc biệt `` BuiltinData '' thay vì kiểu `` Dữ liệu '' bên dưới
 
-However, you will typically not want to use ``BuiltinData`` directly in your program, rather you will want to use your own datatypes.
-We can easily convert to and from ``BuiltinData`` with the :hsobj:`PlutusTx.IsData.Class.ToData`, :hsobj:`PlutusTx.IsData.Class.FromData`, and :hsobj:`PlutusTx.IsData.Class.UnsafeFromData` typeclasses.
-You usually don't need to write your own instances of these classes.
-Instead, you can use the ``makeIsData`` Template Haskell function to generate one.
+Tuy nhiên, bạn thường sẽ không muốn sử dụng trực tiếp `` BuiltinData '' trong chương trình của mình, thay vào đó bạn sẽ muốn sử dụng các kiểu dữ liệu của riêng mình.
+Chúng ta có thể dễ dàng chuyển đổi sang và từ `` BuiltinData '' với: hsobj: `PlutusTx.IsData.Class.ToData`,: hsobj:` PlutusTx.IsData.Class.FromData` và: hsobj: `PlutusTx.IsData.Class Kính đánh máy .UnsafeFromData`.
+Bạn thường không cần phải viết các phiên bản của riêng mình cho các lớp này.
+Thay vào đó, bạn có thể sử dụng hàm Haskell mẫu `` makeIsData '' để tạo một mẫu.
 
-.. note::
-   The :hsobj:`PlutusTx.IsData.Class.UnsafeFromData` class provides ``unsafeFromBuiltinData``, which is the same as ``fromBuiltinData``, but is faster and fails with ``error`` rather than returning a ``Maybe``.
-   We'll use ``unsafeFromBuiltinData`` in this tutorial, but sometimes the other version is useful.
+.. Lưu ý::
+   Lớp :hsobj:`PlutusTx.IsData.Class.UnsafeFromData` cung cấp ``unsafeFromBuiltinData``, giống như  ``fromBuiltinData``, nhưng nhanh hơn và lỗi với  ``error`` thay vì trả về ``Maybe``.
+   Chúng ta sẽ dùng  ``unsafeFromBuiltinData`` trong ví dụ này, nhưng thỉnh thoảng nó sẽ được dùng ở ví dụ khác
 
 .. literalinclude:: BasicValidators.hs
    :start-after: BLOCK1
    :end-before: BLOCK2
 
-Signaling failure
+Báo hiệu thất bại
 -----------------
 
-The most important thing that a validator can do is *fail*.
-This indicates that the attempt to spend the output is invalid and that transaction validation should fail.
-A validator succeeds if it does not explicitly fail.
-The actual value returned by the validator is irrelevant.
+Điều quan trọng nhất mà trình xác thực có thể làm là * fail *.
+Điều này chỉ ra rằng nỗ lực sử dụng đầu ra là không hợp lệ và việc xác thực giao dịch sẽ không thành công.
+Trình xác thực thành công nếu nó không thất bại một cách rõ ràng.
+Giá trị thực tế do trình xác thực trả về không liên quan.
 
-How does a validator fail?
-It does so by using the :hsobj:`PlutusTx.Builtins.error` builtin.
-Some other builtins may also trigger failure if they are used incorrectly (e.g. ``1/0``).
+Làm thế nào để trình xác thực không thành công?
+Nó làm như vậy bằng cách sử dụng nội trang: hsobj: `PlutusTx.Builtins.error`.
+Một số nội trang khác cũng có thể gây ra lỗi nếu chúng được sử dụng không đúng cách (ví dụ: `` 1/0 '').
 
-Validator functions
+Các chức năng của trình xác thực
 -------------------
 
-We write validator scripts as Haskell functions, which we compile with Plutus Tx into Plutus Core.
-The type of a validator function is ``BuiltinData -> BuiltinData -> BuiltinData -> ()``, that is, a function which takes three arguments of type ``BuiltinData``, and returns a value of type ``()`` ("unit" or "the empty tuple" -- since the return type doesn't matter we just pick something trivial).
+Chúng tôi viết các tập lệnh trình xác thực dưới dạng các hàm Haskell, chúng tôi biên dịch với Plutus Tx thành Plutus Core.
+Loại của một hàm xác thực là `` BuiltinData -> BuiltinData -> BuiltinData -> () ``, nghĩa là, một hàm nhận ba đối số kiểu `` BuiltinData '' và trả về giá trị kiểu `` () `` ("đơn vị" hoặc "bộ trống" - vì kiểu trả về không quan trọng nên chúng tôi chỉ chọn một cái gì đó tầm thường).
 
-Here are two examples of simple validators that always succeed and always fail, respectively:
+Dưới đây là hai ví dụ về trình xác nhận đơn giản luôn thành công và luôn thất bại, tương ứng:
 
 .. literalinclude:: BasicValidators.hs
    :start-after: BLOCK2
    :end-before: BLOCK3
 
-If we want to write a validator that uses types other than ``BuiltinData``, we'll need to use the functions from :hsobj:`PlutusTx.IsData.Class.FromData` to decode them.
-Importantly, ``unsafeFromBuiltinData`` can fail: in our example if the ``BuiltinData`` in the second argument is *not* a correctly encoded ``Date`` then it will fail the whole validation with ``error``, which is usually what we want if we have bad arguments.
+Nếu chúng ta muốn viết trình xác thực sử dụng các kiểu không phải là `` BuiltinData '', chúng ta sẽ cần sử dụng các hàm từ: hsobj: `PlutusTx.IsData.Class.FromData` để giải mã chúng.
+Quan trọng là, `` secureFromBuiltinData '' có thể bị lỗi: trong ví dụ của chúng tôi nếu `` BuiltinData '' trong đối số thứ hai là * không phải * là `` Ngày tháng '' được mã hóa chính xác thì nó sẽ không xác thực toàn bộ với `` lỗi '', mà thường là những gì chúng ta muốn nếu chúng ta có những lập luận không tốt.
 
 .. TODO: write a HOWTO about error reporting
 
@@ -78,23 +78,23 @@ Importantly, ``unsafeFromBuiltinData`` can fail: in our example if the ``Builtin
    Unfortunately there's no way to provide failure diagnostics when a validator fails on chain -- it just fails.
    However, since transaction validation is entirely deterministic, you'll always be informed of this before you submit the transaction to the chain, so you can debug it locally using ``traceError``.
 
-Here's an example that uses our date types to check whether the date which was provided is less than the stored limit in the datum.
+Dưới đây là một ví dụ sử dụng các loại ngày của chúng tôi để kiểm tra xem ngày được cung cấp có nhỏ hơn giới hạn được lưu trữ trong dữ liệu hay không.
 
 .. literalinclude:: BasicValidators.hs
    :start-after: BLOCK3
    :end-before: BLOCK4
 
-Using the script context
+Sử dụng ngữ cảnh script
 ------------------------
 
-Validators have access to the :term:`script context` as their third argument.
-This will always be a value of type :hsobj:`Plutus.V1.Ledger.Contexts.ScriptContext` encoded as ``Data``.
+Trình xác thực có quyền truy cập vào: term: `script context` làm đối số thứ ba của họ.
+Đây sẽ luôn là một giá trị kiểu: hsobj: `Plutus.V1.Ledger.Contexts.ScriptContext` được mã hóa là` `Dữ liệu ''.
 
-The script context gives validators a great deal of power, because it allows them to inspect other inputs and outputs of the current transaction.
-For example, here is a validator that will only accept the transaction if a particular payment is made as part of it.
+Bối cảnh tập lệnh cung cấp cho trình xác thực rất nhiều quyền lực, vì nó cho phép họ kiểm tra các đầu vào và đầu ra khác của giao dịch hiện tại.
+Ví dụ: đây là trình xác thực sẽ chỉ chấp nhận giao dịch nếu một khoản thanh toán cụ thể được thực hiện như một phần của nó..
 
 .. literalinclude:: BasicValidators.hs
    :start-after: BLOCK4
    :end-before: BLOCK5
 
-This makes use of some useful functions for working with script contexts.
+Điều này sử dụng một số chức năng hữu ích để làm việc với các ngữ cảnh tập lệnh.

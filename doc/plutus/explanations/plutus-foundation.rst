@@ -8,30 +8,25 @@ Plutus Foundation là gì?
 Plutus Core
 -----------
 
-In the Plutus Platform, this language is *Plutus Core*.
-Plutus Core is a variant of the lambda calculus, a well-studied formalism for computing.
+Trong Nền tảng Plutus, ngôn ngữ này là  *Plutus Core*.
+Plutus Core là một biến thể của lambda calculus, một ghiên cứu kỹ lưỡng về tính toán.
 
 .. note::
-    Plutus Core is our "assembly language".
-    Trust me, you don't want to see any!
-    Dealing with that is the compiler's job.
+    Plutus Core là “hợp ngữ” của chúng tôi. Hãy tin tưởng ở tôi, bạn không muốn nhìn thấy bất kỳ điều gì! Đối phó với điều đó là công việc của trình biên dịch.
 
-Plutus Core is designed for simplicity, determinism, and to allow careful cost control of program execution.
-Using the lambda calculus makes it an easy compilation target for functional programming languages, and allows us to have a simple, formally verified evaluator.
+Plutus Core được thiết kế cho sự đơn giản, tính xác định và cho phép kiểm soát chi phí cẩn thận khi thực hiện chương trình. Sử dụng phép tính lambda làm cho nó trở thành mục tiêu biên dịch dễ dàng cho các ngôn ngữ lập trình hàm và cho phép chúng tôi có một bộ đánh giá đơn giản, được xác minh chính thức.
 
 Plutus Tx
 ---------
 
-Writing Plutus Core by hand is not a job for a human!
-It is designed to be written by a compiler, and the Platform provides a compiler from a subset of Haskell to Plutus Core.
-This allows you to seamlessly write applications in Haskell, while compiling part of the code to on-chain Plutus Core, and part into an off-chain application.
+Viết Plutus Core bằng tay không phải là công việc của một con người! Nó được thiết kế để được viết bởi một trình biên dịch và Nền tảng cung cấp một trình biên dịch từ một tập hợp con của Haskell đến Plutus Core. Điều này cho phép bạn viết ứng dụng liền mạch trong Haskell, trong khi biên dịch một phần mã sang Plutus Core trên chuỗi và một phần vào ứng dụng ngoài chuỗi.
 
-Supporting "mixed" code in this way enables libraries written with the Plutus Haskell SDK to share logic and datatypes across both parts of the application, reducing the risk of errors significantly.
+Hỗ trợ mã “hỗn hợp” theo cách này cho phép các thư viện được viết bằng Plutus Haskell SDK để chia sẻ logic và kiểu dữ liệu trên cả hai phần của ứng dụng, giảm nguy cơ lỗi đáng kể.
 
 Further reading
 ---------------
 
-The formal details of Plutus Core are in its specification :cite:p:`plutus-core-spec`.
-The design is discussed in :cite:t:`plutus-report`.
+Các chi tiết chính thức của Plutus Core nằm trong đặc điểm kỹ thuật của nó  :cite:p:`plutus-core-spec`.
+Thiết kế được thảo luận trong IOHK :cite:t:`plutus-report`.
 
-For more about Plutus Tx, see the :ref:`tutorial<plutus_tx_tutorial>`.
+Để biết thêm về Plutus Tx, hãy xem :ref:`tutorial<plutus_tx_tutorial>`.

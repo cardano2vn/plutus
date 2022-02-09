@@ -1,10 +1,9 @@
 .. _what_is_plutus_foundation:
 
-What is Plutus Foundation?
+Plutus Foundation là gì?
 ==========================
 
-In order for an application to run its :ref:`trusted kernel<what_is_the_plutus_platform>` of logic as a script on a :ref:`ledger<what_is_a_ledger>`, the ledger needs a way of specifying and executing scripts.
-Scripts are simply programs, so this means we need a *programming language*.
+Để một ứng dụng chạy :ref:` hạt nhân đáng tin cậy <what_is_the_plutus_platform>` dưới dạng tập lệnh :ref:`ledger<what_is_a_ledger>`, sổ cái cần có cách chỉ định và thực thi các tập lệnh. Scripts chỉ đơn giản là các chương trình, vì vậy điều này có nghĩa là chúng ta cần một  *ngôn ngữ lập trình*.
 
 Plutus Core
 -----------

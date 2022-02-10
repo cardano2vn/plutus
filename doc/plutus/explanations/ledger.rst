@@ -1,97 +1,75 @@
 .. _what_is_a_ledger:
 
-What is a ledger?
+Sổ cái là gì?
 =================
 
-The :ref:`Plutus Platform<what_is_the_plutus_platform>` is designed to work with distributed ledgers (henceforth simply “ledgers”).
-Ledgers are typically *implemented* with a blockchain, such as Cardano.
-However, much of the time when we are talking about ledgers we don't care about the underlying implementation, and so we will just talk about the ledger itself.
+:ref:`Nền tảng<what_is_the_plutus_platform>` được thiết kế để hoạt động với các sổ cái phân tán (từ đó trở đi chỉ đơn giản là "sổ cái"). Sổ cái thường được triển khai với một blockchain, chẳng hạn như Cardano. Tuy nhiên, phần lớn khi chúng ta nói về sổ cái, chúng ta không quan tâm đến việc triển khai cơ bản, và vì vậy chúng ta sẽ chỉ nói về bản thân sổ cái.
 
 .. note::
-    This is not always true: applications do need to care about details of how the underlying blockchain work, because that affects behaviour such as settlement time and rollback policies.
-    As much as possible the Plutus Application Framework tries to shield developers from this complexity, but it is not always possible.
+   Điều này không phải lúc nào cũng đúng: các ứng dụng cần quan tâm đến chi tiết về cách hoạt động của blockchain cơ bản, vì điều đó ảnh hưởng đến hành vi như thời gian giải quyết và chính sách hoàn trả. Khung ứng dụng Plutus cố gắng bảo vệ các nhà phát triển khỏi sự phức tạp này càng nhiều càng tốt, nhưng không phải lúc nào cũng có thể.
 
-In its simplest form, a ledger is a system that tracks who owns what.
+Ở dạng đơn giản nhất, sổ cái là một hệ thống theo dõi ai sở hữu cái gì..
 
-For example:
+Ví dụ:
 
 +------------+----------+
-| Owner      | Balance  |
+|Chủ nhân    |  số dư   |
 +============+==========+
 | Alice      | 43 USD   |
 +------------+----------+
 | Bob        | 12 USD   |
 +------------+----------+
-
-Ledgers are typically transformed by performing a *transaction* that transfers some assets from one party to another.
-In order to be *valid* a transaction will have to pass some checks, such as demonstrating that the transfer is authorized by the owner of the funds.
-After applying a transaction (say, Alice sends Bob 5USD), we have a new state of the ledger.
+Sổ cái thường được chuyển đổi bằng cách thực hiện một *giao dịch* chuyển một số tài sản từ bên này sang bên khác. Để có *hiệu lực*, một giao dịch sẽ phải vượt qua một số kiểm tra, chẳng hạn như chứng minh rằng việc chuyển tiền được chủ sở hữu của khoản tiền. Sau khi áp dụng một giao dịch (giả sử Alice gửi cho Bob 5USD), chúng tôi có một trạng thái mới của sổ cái.
 
 +------------+----------+
-| Owner      | Balance  |
+|Chủ nhân    |  số dư   |
 +============+==========+
 | Alice      | 38 USD   |
 +------------+----------+
 | Bob        | 17 USD   |
 +------------+----------+
 
-Account-based and UTXO-based ledgers
+Sổ cái dựa trên tài khoản và dựa trên UTXO
 ------------------------------------
 
-There are two dominant paradigms for how to *represent* such a system.
-The first, account-based ledgers, model the system exactly as in our example above.
-They keep a list of accounts, and for each account, a balance.
-A transaction simply decreases the balance of the sender, and increases the balance of the recipient.
+Có hai mô hình để *thể hiện* sổ cái như thế nào.
+Sổ cái đầu tiên dựa trên tài khoản, mô hình hóa hệ thống chính xác như trong ví dụ của chúng tôi ở trên. Họ giữ một danh sách các tài khoản và cho mỗi tài khoản, một số dư. Một giao dịch chỉ đơn giản là làm giảm số dư của người gửi và tăng số dư của người nhận.
 
-Account-based ledgers (such as Ethereum) are very simple to implement, but they have difficulties due to the fact that the state of an account is *global*: all transactions that do anything with an account must touch this one number.
-This can lead to issues with throughput, as well as ordering issues (if Alice sends 5USD to Bob, and Bob sends 5USD to Carol, this may succeed or fail depending on the order the transactions are processed in).
+Sổ cái dựa trên tài khoản (chẳng hạn như Ethereum) rất đơn giản để thực hiện, nhưng chúng gặp khó khăn do trạng thái của tài khoản là toàn cầu : tất cả các giao dịch thực hiện bất kỳ điều gì với tài khoản đều phải chạm vào một con số này. Điều này có thể dẫn đến các vấn đề về thông lượng, cũng như các vấn đề về đặt hàng (nếu Alice gửi 5USD cho Bob và Bob gửi 5USD cho Carol, điều này có thể thành công hoặc thất bại tùy thuộc vào thứ tự các giao dịch được xử lý).
 
-The other paradigm is UTXO-based ledgers.
-UTXO-based ledgers (such as Bitcoin) represent the state of the ledger as set of "unspent transaction outputs" (UTXOs).
-A UTXO is like an envelope with some money in it: it is "addressed" to a particular party, and it contains some funds.
-A transaction *spends* some number of UTXOs, and creates some more.
+Mô hình khác là sổ cái dựa trên UTXO. Sổ cái dựa trên UTXO (chẳng hạn như Bitcoin) đại diện cho trạng thái của sổ cái dưới dạng tập hợp các “đầu ra giao dịch chưa sử dụng” (UTXO). UTXO giống như một phong bì với một số tiền trong đó: nó được “gửi” tới một bên cụ thể và nó chứa một số quỹ. Một giao dịch sử dụng một số UTXO và tạo ra một số UTXO khác .
 
-So a transaction that sends 5USD from Alice to Bob would do so by spending some number of already-existing UTXOs belonging to Alice, and creating a new UTXO with 5USD belonging to Bob.
+Vì vậy, một giao dịch gửi 5USD từ Alice đến Bob sẽ thực hiện bằng cách chi tiêu một số UTXO hiện có thuộc về Alice và tạo một UTXO mới với 5USD thuộc về Bob.
 
-UTXO-based ledgers are more complicated, but avoid some of the issues of account-based ledgers, since any transaction deals only with the inputs that it spends.
-Cardano is a UTXO-based ledger, and we heavily rely on this.
-For example, :term:`Hydra`, Cardano's scalability solution, uses the fact that independent parts of the transaction graph can be processed in parallel to improve throughput.
+Sổ cái dựa trên UTXO phức tạp hơn, nhưng tránh một số vấn đề của sổ cái dựa trên tài khoản, vì bất kỳ giao dịch nào cũng chỉ xử lý các đầu vào mà nó chi tiêu. Cardano là một sổ cái dựa trên UTXO và chúng tôi chủ yếu dựa vào điều này. Ví dụ, Hydra , giải pháp khả năng mở rộng của Cardano, sử dụng thực tế là các phần độc lập của biểu đồ giao dịch có thể được xử lý song song để cải thiện thông lượng.
 
-Scripts and the Extended UTXO Model
+Tập lệnh và Mô hình UTXO mở rộng
 -----------------------------------
+Sổ cái dựa trên UTXO thường bắt đầu với một mô hình rất đơn giản về “quyền sở hữu” các UTXO. Một đầu ra sẽ có một khóa công khai (nghiêm ngặt, băm của khóa công khai) được gắn vào nó và để sử dụng đầu ra này, giao dịch chi tiêu phải được ký bằng khóa riêng tương ứng. Chúng tôi gọi đây là đầu ra "pay-to-pubkey".
 
-UTXO-based ledgers typically start out with a very simple model of "ownership" of UTXOs.
-An output will have a public key (strictly, the hash of a public key) attached to it, and in order to spend this output the spending transaction must be signed by the corresponding private key.
-We call this a "pay-to-pubkey" output.
+Cardano sử dụng một mô hình mở rộng được gọi là :term:`Extended UTXO Model` (EUTXO).
+Trong mô hình EUTXO, một đầu ra có thể bị khóa bởi (băm của) một * đoạn mã - script* . Chúng tôi gọi đây là đầu ra “trả cho tập lệnh”.
+đoạn mã là một *chương trình* quyết định xem giao dịch sử dụng đầu ra có được phép làm như vậy hay không. Một đoạn mã như vậy được gọi là tập lệnh trình xác thực, bởi vì nó xác nhận xem chi tiêu có được phép hay không!
+Một đoạn mã xác thực đơn giản sẽ là một chương trình kiểm tra xem giao dịch chi tiêu có được ký bởi một khóa cụ thể hay không - điều này sẽ sao chép chính xác hành vi của các đầu ra pay-to-pubkey đơn giản. Tuy nhiên, với một chút mở rộng cẩn thận, chúng ta có thể sử dụng các đoạn mã để cho phép chúng ta thể hiện một lượng lớn logic hữu ích trên chuỗi.
+Cách thức hoạt động của mô hình EUTXO là các tập lệnh trình xác thực được truyền ba đối số:
 
-Cardano uses an extended model called the :term:`Extended UTXO Model` (EUTXO).
-In the EUTXO model, an output can be locked by (the hash of) a *script*.
-We call this a "pay-to-script" output.
-A script is a *program* that decides whether or not the transaction which spends the output is authorized to do so.
-Such a script is called a validator script, because it validates whether the spending is allowed!
+- *Datum*: đây là một phần dữ liệu được gắn với *đầu ra* mà tập lệnh đang khóa (nghiêm ngặt, một lần nữa, chỉ có hàm băm). Điều này thường được sử dụng để mang trạng thái..
+- *Redeemer*: đây là một phần dữ liệu được đính kèm với *đầu vào* đang thực hiện chi tiêu. Điều này thường được sử dụng để cung cấp đầu vào cho tập lệnh từ người chi tiêu.
+- *Context*: đây là một phần dữ liệu đại diện cho thông tin về giao dịch thực hiện chi tiêu. Điều này được sử dụng để xác nhận về cách đầu ra đang được gửi (chẳng hạn như "Bob đã ký nó").
 
-A simple validator script would be one that checked whether the spending transaction was signed by a particular key - this would exactly replicate the behaviour of simple pay-to-pubkey outputs.
-However, with a bit of careful extension, we can use scripts to let us express a large amount of useful logic on the chain.
+Ví dụ, hãy xem chúng ta có thể thực hiện hoán đổi nguyên tử như thế nào.
 
-The way the EUTXO model works is that validator scripts are passed three arguments:
+- Dữ liệu chứa các khóa của hai bên trong hoán đổi và mô tả về những gì họ đang hoán đổi
 
-- The *datum*: this is a piece of data attached to the *output* that the script is locking (strictly, again, just the hash is present). This is typically used to carry state.
-- The *redeemer*: this is a piece of data attached to the *input* that is doing the spending. This is typically used to provide an input to the script from the spender.
-- The *context*: this is a piece of data which represents information about the transaction doing the spending. This is used to make assertions about the way the output is being sent (such as "Bob signed it").
+- Người mua lại không được sử dụng.
 
-As an example, let's see how we could implement an atomic swap.
+- Bối cảnh chứa một đại diện của giao dịch.
 
-- The datum contains the keys of the two parties in the swap, and a description of what they are swapping
-- The redeemer is unused.
-- The context contains a representation of the transaction.
-
-The logic of the validator script is then: does the transaction make a payment from the second party to the first party, containing the value that they are supposed to send?
-If so, then they may spend this output and send it where they want (or we could insist that the send it to their key, but we might as well let them do what they like with it).
-
-Further reading
+Sau đó, logic của tập lệnh trình xác thực là: liệu giao dịch có thực hiện thanh toán từ bên thứ hai cho bên thứ nhất, có chứa giá trị mà họ phải gửi không? Nếu vậy, họ có thể sử dụng đầu ra này và gửi nó đến nơi họ muốn (hoặc chúng tôi có thể nhấn mạnh rằng gửi nó đến khóa của họ, nhưng chúng tôi cũng có thể để họ làm những gì họ thích với nó).
+Tham Khảo thêm
 ---------------
 
-The Extended UTXO Model is described in :cite:t:`functional-smart-contracts-summit`.
-More formal detail can be found in in :cite:t:`eutxo,utxoma,eutxoma`.
+Mô hình UTXO mở rộng được mô tả trong Chakravarty et al :cite:t:`functional-smart-contracts-summit`.
+ Chi tiết chính thức hơn có thể được tìm thấy trong :cite:t:`eutxo,utxoma,eutxoma`.
 
-For more help on how to actually implement interesting logic using the EUTXO model and scripts, read some of our :ref:`tutorials<plutus_tutorials>`
+Để được trợ giúp thêm về cách thực sự triển khai logic thú vị bằng cách sử dụng mô hình EUTXO và các tập lệnh, hãy đọc một số :ref:`tutorials<plutus_tutorials>`

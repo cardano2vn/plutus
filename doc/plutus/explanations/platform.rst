@@ -1,15 +1,14 @@
 .. _what_is_the_plutus_platform:
 
-What is the Plutus Platform?
+Plutus Platform là gì?
 ============================
 
-The Plutus Platform is a platform for writing *applications* that interact with a *distributed ledger* featuring *scripting* capabilities, in particular the :term:`Cardano` blockchain.
+Nền tảng Plutus là một nền tảng để viết  *ứng dụng* tương tác với một *sổ cái phân tán* có khả năng *lập trình hay viết kịch bản*, đặc biệt là chuỗi khối :term:`Cardano` blockchain.
 
-Applications
+Các ứng dụng
 ------------
 
-What sort of "applications" are we talking about here?
-Let's think about a pair of users, Alice and Bob, who want to engage in an atomic swap of some assets stored on Cardano.
+Chúng ta đang nói đến loại “ứng dụng” nào ở đây? Hãy nghĩ về một cặp người dùng, Alice và Bob, những người muốn tham gia vào một giao dịch hoán đổi nguyên tử của một số tài sản được lưu trữ trên Cardano.
 
 .. uml::
    :caption: Alice and Bob doing an atomic swap
@@ -30,44 +29,33 @@ Let's think about a pair of users, Alice and Bob, who want to engage in an atomi
    Application -> Alice: The swap is completed!
    Application -> Bob: The swap is completed!
 
-Alice and Bob don't interact directly, nor do they directly interact with the ledger.
-Very few "smart" blockchain systems encourage their users to interact directly with the chain themselves, since this is usually complex and error-prone.
-Rather, the users interact with some *application* that presents the world in a form that they can understand and interact with.
+Alice và Bob không tương tác trực tiếp, cũng không tương tác trực tiếp với sổ cái. Rất ít hệ thống blockchain “thông minh” khuyến khích người dùng của họ tự tương tác trực tiếp với chuỗi, vì điều này thường phức tạp và dễ xảy ra lỗi. Thay vào đó, người dùng tương tác với một số ứng dụng trình bày thế giới dưới dạng mà họ có thể hiểu và tương tác.
 
-Of course, such an application must want to do something with the ledger, otherwise you wouldn't need anything new!
-Simple applications might do nothing more than submit basic transactions that transfer assets - imagine a simple "regular payments" application.
-However, our main focus is applications that *do* use smart features in order to have a kernel of trusted code that is validated as part of the ledger.
+Tất nhiên, một ứng dụng như vậy phải muốn làm điều gì đó với sổ cái, nếu không bạn sẽ không cần bất cứ điều gì mới! Các ứng dụng đơn giản có thể không làm gì khác hơn là gửi các giao dịch cơ bản chuyển tài sản - hãy tưởng tượng một ứng dụng “thanh toán thông thường” đơn giản. Tuy nhiên, trọng tâm chính của chúng tôi là các ứng dụng sử dụng các tính năng thông minh để có một nhân mã đáng tin cậy được xác thực như một phần của sổ cái.
 
-This enables applications that are not possible otherwise.
-Alice and Bob need trusted logic in order to perform their swap: a "dumb" application could submit the transactions transferring the assets, but would have no recourse against Bob defecting.
-Using the smart features of the ledger ensures that Bob can't take Alice's token unless he *really does* send her the money, and it does this without involving a trusted third party.
+Điều này cho phép các ứng dụng không khả thi. Alice và Bob cần logic đáng tin cậy để thực hiện hoán đổi của họ: một ứng dụng “ngu ngốc” có thể gửi các giao dịch chuyển tài sản, nhưng sẽ không có biện pháp nào chống lại việc Bob đào tẩu. Việc sử dụng các tính năng thông minh của sổ cái đảm bảo rằng Bob không thể lấy mã thông báo của Alice trừ khi anh ta thực sự gửi tiền cho cô ấy và nó thực hiện điều này mà không liên quan đến bên thứ ba đáng tin cậy.
 
-Creating and using the trusted kernel of code is the most technically difficult and security-sensitive part of the whole operation.
-Nonetheless, writing the rest of the application contains plenty of complexity.
-Amongst other things, an application needs to deal with the software around the ledger (wallets, nodes, etc.); distributed systems issues such as settlement delays, inconsistent state between parties, and rollbacks; and simple user-experience issues like upgrades, state management and synchronization.
-Furthermore, while none of these are quite as security-critical as the trusted kernel, users certainly *can* be attacked through such applications, and even non-malicious bugs are likely to be quite upsetting when a user's money is at stake.
+Tạo và sử dụng hạt nhân đáng tin cậy của mã là phần khó khăn nhất về mặt kỹ thuật và nhạy cảm về bảo mật trong toàn bộ hoạt động. Tuy nhiên, việc viết phần còn lại của ứng dụng chứa rất nhiều phức tạp. Trong số những thứ khác, một ứng dụng cần phải xử lý phần mềm xung quanh sổ cái (ví, nút, v.v.); các vấn đề về hệ thống phân tán chẳng hạn như sự chậm trễ trong thanh toán, trạng thái không nhất quán giữa các bên và quá trình hoàn trả; và các vấn đề đơn giản về trải nghiệm người dùng như nâng cấp, quản lý trạng thái và đồng bộ hóa. Hơn nữa, mặc dù không có cái nào trong số này là khá quan trọng về bảo mật như hạt nhân đáng tin cậy, nhưng người dùng chắc chắn có thể bị tấn công thông qua các ứng dụng như vậy và ngay cả các lỗi không độc hại cũng có thể khá khó chịu khi tiền của người dùng bị đe dọa.
 
-Even simple applications must deal with this complexity, and for more advanced applications that deal with state across time, the difficulty is magnified.
+Ngay cả các ứng dụng đơn giản cũng phải đối phó với sự phức tạp này, và đối với các ứng dụng nâng cao hơn xử lý trạng thái theo thời gian, khó khăn càng tăng lên gấp bội.
 
-The Plutus Platform
+Nền tảng Plutus
 -------------------
 
-This is why the Plutus Platform is a *platform*.
-Rather than just providing a few tools to make the bare minimum possible, we aim to support application development in its entirety, right the way through from authoring to testing, runtime support, and (eventually) verification.
-Ultimately, we wrote it because we needed it ourselves to do anything useful!
+Đây là lý do tại sao Nền tảng Plutus là một nền tảng . Thay vì chỉ cung cấp một vài công cụ để làm cho mức tối thiểu có thể đạt được, chúng tôi hướng tới việc hỗ trợ toàn bộ quá trình phát triển ứng dụng, ngay từ khâu soạn thảo đến kiểm tra, hỗ trợ thời gian chạy và (cuối cùng) xác minh. Cuối cùng, chúng tôi viết nó bởi vì chúng tôi cần bản thân nó để làm bất cứ điều gì hữu ích!
 
-Conceptually, the Platform breaks down based on which part of the system we're interested in:
+Về mặt khái niệm, Nền tảng chia nhỏ dựa trên phần nào của hệ thống mà chúng tôi quan tâm:
 
-- :ref:`Plutus Foundation<what_is_plutus_foundation>`: support for writing the trusted kernel of code, and executing it on the chain
-- `The Plutus Application Framework <https://github.com/input-output-hk/plutus-apps>`_: support for writing applications ("Plutus Applications") in a particular style
+- :ref:`Plutus Foundation<what_is_plutus_foundation>`: hỗ trợ viết hạt nhân đáng tin cậy của mã và thực thi nó trên chuỗi
+- `The Plutus Application Framework <https://github.com/input-output-hk/plutus-apps>`_: s hỗ trợ viết ứng dụng (“Ứng dụng Plutus”) theo một phong cách cụ thể
 
 .. figure:: ./platform-architecture.png
 
-    A high-level architecture of the Plutus Platform, with an emphasis on applications.
+  Một kiến ​​trúc cấp cao của Nền tảng Plutus, tập trung vào các ứng dụng.
 
-Further reading
+Tham khảo thêm
 ---------------
 
-The platform is introduced in :cite:t:`plutus-platform-summit`.
+Nền tảng được giới thiệu trong Peyton Jones và Müller :cite:t:`plutus-platform-summit`.
 
-The design of the platform is discussed in :cite:t:`plutus-report`.
+Thiết kế của nền tảng được thảo luận trong IOHK :cite:t:`plutus-report`.
